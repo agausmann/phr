@@ -17,7 +17,34 @@ impl juniper::Context for Context {}
 struct Query;
 
 #[juniper::object(Context = Context)]
-impl Query {}
+impl Query {
+    fn user(context: &Context, id: i32) -> FieldResult<Option<User>> {
+        use self::users::dsl::*;
+        users
+            .find(id)
+            .first(&context.db)
+            .optional()
+            .map_err(Into::into)
+    }
+
+    fn username(context: &Context, name: String) -> FieldResult<Option<User>> {
+        use self::users::dsl::*;
+        users
+            .filter(self::users::dsl::name.eq(name))
+            .first(&context.db)
+            .optional()
+            .map_err(Into::into)
+    }
+
+    fn race(context: &Context, id: i32) -> FieldResult<Option<Race>> {
+        use self::races::dsl::*;
+        races
+            .find(id)
+            .first(&context.db)
+            .optional()
+            .map_err(Into::into)
+    }
+}
 
 struct Mutation;
 
@@ -43,7 +70,7 @@ impl User {
     }
 
     fn entries(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
-        use crate::schema::race_entrants::dsl::*;
+        use self::race_entrants::dsl::*;
         race_entrants
             .filter(user_id.eq(self.id))
             .load(&context.db)
@@ -83,7 +110,7 @@ impl Race {
     }
 
     fn entrants(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
-        use crate::schema::race_entrants::dsl::*;
+        use self::race_entrants::dsl::*;
         race_entrants
             .filter(race_id.eq(self.id))
             .load(&context.db)
@@ -91,8 +118,7 @@ impl Race {
     }
 }
 
-#[derive(Debug, Clone, Associations, Identifiable, Queryable)]
-#[belongs_to(Race)]
+#[derive(Debug, Clone, Identifiable, Queryable)]
 #[primary_key(race_id, user_id)]
 struct RaceEntrant {
     race_id: i32,
@@ -115,7 +141,7 @@ impl RaceEntrant {
     }
 
     fn race(&self, context: &Context) -> FieldResult<Race> {
-        use crate::schema::races::dsl::*;
+        use self::races::dsl::*;
         races
             .find(self.race_id)
             .first(&context.db)
@@ -127,7 +153,7 @@ impl RaceEntrant {
     }
 
     fn user(&self, context: &Context) -> FieldResult<User> {
-        use crate::schema::users::dsl::*;
+        use self::users::dsl::*;
         users
             .find(self.user_id)
             .first(&context.db)
