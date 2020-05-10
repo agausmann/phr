@@ -153,7 +153,7 @@ impl RaceEntrant {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, GraphQLEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, FromSqlRow, GraphQLEnum)]
 enum Reason {
     Dns,
     Dnf,
