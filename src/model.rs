@@ -35,7 +35,7 @@ struct RaceEntrant {
     reason: Option<Reason>,
     ping: Option<i32>,
     fps: Option<i32>,
-    fps_locked: Option<bool>,
+    fps_locked: bool,
 }
 
 #[derive(Debug, Clone)]

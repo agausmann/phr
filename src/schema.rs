@@ -20,7 +20,7 @@ table! {
         reason -> Nullable<Integer>,
         ping -> Nullable<Integer>,
         fps -> Nullable<Integer>,
-        fps_locked -> Nullable<Bool>,
+        fps_locked -> Bool,
     }
 }
 
