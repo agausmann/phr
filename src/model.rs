@@ -2,13 +2,15 @@ use crate::schema::{race_entrants, races, users};
 use chrono::naive::NaiveDate;
 use diesel::backend::Backend;
 use diesel::deserialize::{self, FromSql};
+use diesel::prelude::*;
 use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::Integer;
-use diesel::{Associations, Identifiable, Queryable};
-use juniper::GraphQLEnum;
+use juniper::{FieldResult, GraphQLEnum};
 use std::io::Write;
 
-struct Context {}
+struct Context {
+    db: MysqlConnection,
+}
 
 impl juniper::Context for Context {}
 
@@ -40,8 +42,12 @@ impl User {
         &self.name
     }
 
-    fn entries(&self, context: &Context) -> Vec<RaceEntrant> {
-        unimplemented!()
+    fn entries(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
+        use crate::schema::race_entrants::dsl::*;
+        race_entrants
+            .filter(user_id.eq(self.id))
+            .load(&context.db)
+            .map_err(Into::into)
     }
 }
 
@@ -76,8 +82,12 @@ impl Race {
         self.minutes
     }
 
-    fn entrants(&self, context: &Context) -> Vec<RaceEntrant> {
-        unimplemented!()
+    fn entrants(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
+        use crate::schema::race_entrants::dsl::*;
+        race_entrants
+            .filter(race_id.eq(self.id))
+            .load(&context.db)
+            .map_err(Into::into)
     }
 }
 
@@ -104,16 +114,24 @@ impl RaceEntrant {
         self.race_id
     }
 
-    fn race(&self, context: &Context) -> Race {
-        unimplemented!()
+    fn race(&self, context: &Context) -> FieldResult<Race> {
+        use crate::schema::races::dsl::*;
+        races
+            .find(self.race_id)
+            .first(&context.db)
+            .map_err(Into::into)
     }
 
     fn user_id(&self) -> i32 {
         self.user_id
     }
 
-    fn user(&self, context: &Context) -> User {
-        unimplemented!()
+    fn user(&self, context: &Context) -> FieldResult<User> {
+        use crate::schema::users::dsl::*;
+        users
+            .find(self.user_id)
+            .first(&context.db)
+            .map_err(Into::into)
     }
 
     fn position(&self) -> Option<i32> {
