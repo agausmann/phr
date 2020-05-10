@@ -1,0 +1,3 @@
+ALTER TABLE users
+    DROP KEY name,
+    MODIFY COLUMN name TEXT NOT NULL;

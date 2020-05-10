@@ -27,7 +27,7 @@ table! {
 table! {
     users (id) {
         id -> Integer,
-        name -> Text,
+        name -> Varchar,
     }
 }
 
