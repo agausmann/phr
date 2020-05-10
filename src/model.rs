@@ -4,12 +4,45 @@ use diesel::backend::Backend;
 use diesel::deserialize::{self, FromSql};
 use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::Integer;
+use diesel::{Associations, Identifiable, Queryable};
+use juniper::GraphQLEnum;
 use std::io::Write;
+
+struct Context {}
+
+impl juniper::Context for Context {}
+
+struct Query;
+
+#[juniper::object(Context = Context)]
+impl Query {}
+
+struct Mutation;
+
+#[juniper::object(Context = Context)]
+impl Mutation {}
+
+type Schema = juniper::RootNode<'static, Query, Mutation>;
 
 #[derive(Debug, Clone, Identifiable, Queryable)]
 struct User {
     id: i32,
     name: String,
+}
+
+#[juniper::object(Context = Context)]
+impl User {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn entries(&self, context: &Context) -> Vec<RaceEntrant> {
+        unimplemented!()
+    }
 }
 
 #[derive(Debug, Clone, Identifiable, Queryable)]
@@ -19,6 +52,33 @@ struct Race {
     track: String,
     laps: Option<i32>,
     minutes: Option<i32>,
+}
+
+#[juniper::object(Context = Context)]
+impl Race {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn date(&self) -> NaiveDate {
+        self.date
+    }
+
+    fn track(&self) -> &str {
+        &self.track
+    }
+
+    fn laps(&self) -> Option<i32> {
+        self.laps
+    }
+
+    fn minutes(&self) -> Option<i32> {
+        self.minutes
+    }
+
+    fn entrants(&self, context: &Context) -> Vec<RaceEntrant> {
+        unimplemented!()
+    }
 }
 
 #[derive(Debug, Clone, Associations, Identifiable, Queryable)]
@@ -38,7 +98,62 @@ struct RaceEntrant {
     fps_locked: bool,
 }
 
-#[derive(Debug, Clone)]
+#[juniper::object(Context = Context)]
+impl RaceEntrant {
+    fn race_id(&self) -> i32 {
+        self.race_id
+    }
+
+    fn race(&self, context: &Context) -> Race {
+        unimplemented!()
+    }
+
+    fn user_id(&self) -> i32 {
+        self.user_id
+    }
+
+    fn user(&self, context: &Context) -> User {
+        unimplemented!()
+    }
+
+    fn position(&self) -> Option<i32> {
+        self.position
+    }
+
+    fn vehicle(&self) -> Option<&str> {
+        self.vehicle.as_ref().map(String::as_str)
+    }
+
+    fn time(&self) -> Option<i32> {
+        self.time
+    }
+
+    fn best_lap(&self) -> Option<i32> {
+        self.best_lap
+    }
+
+    fn lap(&self) -> Option<i32> {
+        self.lap
+    }
+
+    fn reason(&self) -> Option<Reason> {
+        self.reason
+    }
+
+    fn ping(&self) -> Option<i32> {
+        self.ping
+    }
+
+    fn fps(&self) -> Option<i32> {
+        self.fps
+    }
+
+    fn fps_locked(&self) -> bool {
+        self.fps_locked
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, GraphQLEnum)]
 enum Reason {
     Dns,
     Dnf,
