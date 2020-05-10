@@ -1,4 +1,5 @@
 use crate::schema::{race_entrants, races, users};
+use chrono::naive::NaiveDate;
 use diesel::backend::Backend;
 use diesel::deserialize::{self, FromSql};
 use diesel::serialize::{self, Output, ToSql};
@@ -14,6 +15,7 @@ struct User {
 #[derive(Debug, Clone, Identifiable, Queryable)]
 struct Race {
     id: i32,
+    date: NaiveDate,
     track: String,
     laps: Option<i32>,
     minutes: Option<i32>,

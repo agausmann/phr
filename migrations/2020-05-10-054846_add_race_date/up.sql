@@ -1,0 +1,2 @@
+ALTER TABLE races
+    ADD COLUMN date DATE NOT NULL AFTER id;

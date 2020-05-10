@@ -1,6 +1,7 @@
 table! {
     races (id) {
         id -> Integer,
+        date -> Date,
         track -> Text,
         laps -> Nullable<Integer>,
         minutes -> Nullable<Integer>,
