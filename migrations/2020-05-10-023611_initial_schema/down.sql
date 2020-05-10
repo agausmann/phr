@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS race_entrants;
+DROP TABLE IF EXISTS races;
+DROP TABLE IF EXISTS users;
