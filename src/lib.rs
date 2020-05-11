@@ -4,4 +4,5 @@
 extern crate diesel;
 
 mod model;
+mod parser;
 mod schema;

@@ -4,11 +4,12 @@ use diesel::backend::Backend;
 use diesel::deserialize::{self, FromSql};
 use diesel::prelude::*;
 use diesel::serialize::{self, Output, ToSql};
-use diesel::sql_types::Integer;
+use diesel::sql_types::{Integer, Nullable};
+use diesel_derive_enum::DbEnum;
 use juniper::{FieldResult, GraphQLEnum};
 use std::io::Write;
 
-struct Context {
+pub struct Context {
     db: MysqlConnection,
 }
 
@@ -20,29 +21,20 @@ struct Query;
 impl Query {
     fn user(context: &Context, id: i32) -> FieldResult<Option<User>> {
         use self::users::dsl::*;
-        users
-            .find(id)
-            .first(&context.db)
-            .optional()
-            .map_err(Into::into)
+        Ok(users.find(id).first(&context.db).optional()?)
     }
 
     fn username(context: &Context, name: String) -> FieldResult<Option<User>> {
         use self::users::dsl::*;
-        users
+        Ok(users
             .filter(self::users::dsl::name.eq(name))
             .first(&context.db)
-            .optional()
-            .map_err(Into::into)
+            .optional()?)
     }
 
     fn race(context: &Context, id: i32) -> FieldResult<Option<Race>> {
         use self::races::dsl::*;
-        races
-            .find(id)
-            .first(&context.db)
-            .optional()
-            .map_err(Into::into)
+        Ok(races.find(id).first(&context.db).optional()?)
     }
 }
 
@@ -54,9 +46,9 @@ impl Mutation {}
 type Schema = juniper::RootNode<'static, Query, Mutation>;
 
 #[derive(Debug, Clone, Identifiable, Queryable)]
-struct User {
-    id: i32,
-    name: String,
+pub struct User {
+    pub(crate) id: i32,
+    pub(crate) name: String,
 }
 
 #[juniper::object(Context = Context)]
@@ -71,20 +63,36 @@ impl User {
 
     fn entries(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
         use self::race_entrants::dsl::*;
-        race_entrants
+        Ok(race_entrants
             .filter(user_id.eq(self.id))
-            .load(&context.db)
-            .map_err(Into::into)
+            .load(&context.db)?)
     }
 }
 
-#[derive(Debug, Clone, Identifiable, Queryable)]
-struct Race {
-    id: i32,
-    date: NaiveDate,
-    track: String,
-    laps: Option<i32>,
-    minutes: Option<i32>,
+#[derive(Debug, Clone, Insertable)]
+#[table_name = "users"]
+pub struct UserName {
+    pub(crate) name: String,
+}
+
+impl UserName {
+    pub fn get_or_insert(self, conn: &MysqlConnection) -> anyhow::Result<i32> {
+        use self::users::dsl::*;
+        diesel::insert_or_ignore_into(users)
+            .values(self.clone())
+            .execute(conn)?;
+
+        Ok(users.select(id).filter(name.eq(self.name)).first(conn)?)
+    }
+}
+
+#[derive(Debug, Clone, Identifiable, Insertable, Queryable)]
+pub struct Race {
+    pub(crate) id: i32,
+    pub(crate) date: NaiveDate,
+    pub(crate) track: String,
+    pub(crate) laps: Option<i32>,
+    pub(crate) minutes: Option<i32>,
 }
 
 #[juniper::object(Context = Context)]
@@ -111,27 +119,26 @@ impl Race {
 
     fn entrants(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
         use self::race_entrants::dsl::*;
-        race_entrants
+        Ok(race_entrants
             .filter(race_id.eq(self.id))
-            .load(&context.db)
-            .map_err(Into::into)
+            .load(&context.db)?)
     }
 }
 
-#[derive(Debug, Clone, Identifiable, Queryable)]
+#[derive(Debug, Clone, Identifiable, Insertable, Queryable)]
 #[primary_key(race_id, user_id)]
-struct RaceEntrant {
-    race_id: i32,
-    user_id: i32,
-    position: Option<i32>,
-    vehicle: Option<String>,
-    time: Option<i32>,
-    best_lap: Option<i32>,
-    lap: Option<i32>,
-    reason: Option<Reason>,
-    ping: Option<i32>,
-    fps: Option<i32>,
-    fps_locked: bool,
+pub struct RaceEntrant {
+    pub(crate) race_id: i32,
+    pub(crate) user_id: i32,
+    pub(crate) position: Option<i32>,
+    pub(crate) vehicle: Option<String>,
+    pub(crate) time: Option<i32>,
+    pub(crate) best_lap: Option<i32>,
+    pub(crate) lap: Option<i32>,
+    pub(crate) reason: Option<Reason>,
+    pub(crate) ping: Option<i32>,
+    pub(crate) fps: Option<i32>,
+    pub(crate) fps_locked: bool,
 }
 
 #[juniper::object(Context = Context)]
@@ -142,10 +149,7 @@ impl RaceEntrant {
 
     fn race(&self, context: &Context) -> FieldResult<Race> {
         use self::races::dsl::*;
-        races
-            .find(self.race_id)
-            .first(&context.db)
-            .map_err(Into::into)
+        Ok(races.find(self.race_id).first(&context.db)?)
     }
 
     fn user_id(&self) -> i32 {
@@ -154,10 +158,7 @@ impl RaceEntrant {
 
     fn user(&self, context: &Context) -> FieldResult<User> {
         use self::users::dsl::*;
-        users
-            .find(self.user_id)
-            .first(&context.db)
-            .map_err(Into::into)
+        Ok(users.find(self.user_id).first(&context.db)?)
     }
 
     fn position(&self) -> Option<i32> {
@@ -197,39 +198,9 @@ impl RaceEntrant {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, FromSqlRow, GraphQLEnum)]
-enum Reason {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, DbEnum, GraphQLEnum)]
+pub enum Reason {
     Dns,
     Dnf,
     Dsq,
-}
-
-impl<DB> FromSql<Integer, DB> for Reason
-where
-    DB: Backend,
-    i32: FromSql<Integer, DB>,
-{
-    fn from_sql(bytes: Option<&DB::RawValue>) -> deserialize::Result<Self> {
-        match i32::from_sql(bytes)? {
-            1 => Ok(Reason::Dns),
-            2 => Ok(Reason::Dnf),
-            3 => Ok(Reason::Dsq),
-            x => Err(format!("unrecognized variant {}", x).into()),
-        }
-    }
-}
-
-impl<DB> ToSql<Integer, DB> for Reason
-where
-    DB: Backend,
-    i32: ToSql<Integer, DB>,
-{
-    fn to_sql<W: Write>(&self, out: &mut Output<W, DB>) -> serialize::Result {
-        match self {
-            Reason::Dns => 1,
-            Reason::Dnf => 2,
-            Reason::Dsq => 3,
-        }
-        .to_sql(out)
-    }
 }

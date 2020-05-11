@@ -1,4 +1,7 @@
 table! {
+    use diesel::sql_types::*;
+    use crate::model::*;
+
     races (id) {
         id -> Integer,
         date -> Date,
@@ -9,6 +12,9 @@ table! {
 }
 
 table! {
+    use diesel::sql_types::*;
+    use crate::model::*;
+
     race_entrants (race_id, user_id) {
         race_id -> Integer,
         user_id -> Integer,
@@ -17,7 +23,7 @@ table! {
         time -> Nullable<Integer>,
         best_lap -> Nullable<Integer>,
         lap -> Nullable<Integer>,
-        reason -> Nullable<Integer>,
+        reason -> Nullable<ReasonMapping>,
         ping -> Nullable<Integer>,
         fps -> Nullable<Integer>,
         fps_locked -> Bool,
@@ -25,6 +31,9 @@ table! {
 }
 
 table! {
+    use diesel::sql_types::*;
+    use crate::model::*;
+
     users (id) {
         id -> Integer,
         name -> Varchar,
