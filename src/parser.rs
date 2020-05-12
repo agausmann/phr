@@ -30,10 +30,8 @@ impl Race {
                 laps: self.laps,
                 minutes: self.minutes,
             };
-            {
-                use crate::schema::races::dsl::*;
-                new_race.insert_into(races).execute(conn)?;
-            }
+            use crate::schema::races::dsl::races;
+            new_race.insert_into(races).execute(conn)?;
 
             for entrant in self.entrants {
                 let new_user = model::UserName { name: entrant.name };
@@ -51,10 +49,8 @@ impl Race {
                     fps: entrant.fps,
                     fps_locked: entrant.fps_locked,
                 };
-                {
-                    use crate::schema::race_entrants::dsl::*;
-                    new_entrant.insert_into(race_entrants).execute(conn)?;
-                }
+                use crate::schema::race_entrants::dsl::race_entrants;
+                new_entrant.insert_into(race_entrants).execute(conn)?;
             }
             Ok(())
         })

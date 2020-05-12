@@ -27,22 +27,19 @@ pub(crate) struct Query;
 impl Query {
     fn user(context: &Context, id: i32) -> FieldResult<Option<User>> {
         let db = context.db.get()?;
-        use crate::schema::users::dsl::*;
+        use crate::schema::users::dsl::users;
         Ok(users.find(id).first(&db).optional()?)
     }
 
     fn username(context: &Context, name: String) -> FieldResult<Option<User>> {
         let db = context.db.get()?;
-        use crate::schema::users::dsl::*;
-        Ok(users
-            .filter(crate::schema::users::dsl::name.eq(name))
-            .first(&db)
-            .optional()?)
+        use crate::schema::users::dsl::{self, users};
+        Ok(users.filter(dsl::name.eq(name)).first(&db).optional()?)
     }
 
     fn race(context: &Context, id: i32) -> FieldResult<Option<Race>> {
         let db = context.db.get()?;
-        use crate::schema::races::dsl::*;
+        use crate::schema::races::dsl::races;
         Ok(races.find(id).first(&db).optional()?)
     }
 }
@@ -64,7 +61,7 @@ impl User {
 
     fn entries(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
         let db = context.db.get()?;
-        use crate::schema::race_entrants::dsl::*;
+        use crate::schema::race_entrants::dsl::{race_entrants, user_id};
         Ok(race_entrants.filter(user_id.eq(self.id)).load(&db)?)
     }
 }
@@ -93,7 +90,7 @@ impl Race {
 
     fn entrants(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
         let db = context.db.get()?;
-        use crate::schema::race_entrants::dsl::*;
+        use crate::schema::race_entrants::dsl::{race_entrants, race_id};
         Ok(race_entrants.filter(race_id.eq(self.id)).load(&db)?)
     }
 }
@@ -106,7 +103,7 @@ impl RaceEntrant {
 
     fn race(&self, context: &Context) -> FieldResult<Race> {
         let db = context.db.get()?;
-        use crate::schema::races::dsl::*;
+        use crate::schema::races::dsl::races;
         Ok(races.find(self.race_id).first(&db)?)
     }
 
@@ -116,7 +113,7 @@ impl RaceEntrant {
 
     fn user(&self, context: &Context) -> FieldResult<User> {
         let db = context.db.get()?;
-        use crate::schema::users::dsl::*;
+        use crate::schema::users::dsl::users;
         Ok(users.find(self.user_id).first(&db)?)
     }
 
