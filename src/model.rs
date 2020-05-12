@@ -4,13 +4,13 @@ use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
 use juniper::{FieldResult, GraphQLEnum};
 
-pub struct Context {
-    db: MysqlConnection,
+pub(crate) struct Context {
+    pub(crate) db: MysqlConnection,
 }
 
 impl juniper::Context for Context {}
 
-struct Query;
+pub(crate) struct Query;
 
 #[juniper::object(Context = Context)]
 impl Query {
@@ -33,15 +33,15 @@ impl Query {
     }
 }
 
-struct Mutation;
+pub(crate) struct Mutation;
 
 #[juniper::object(Context = Context)]
 impl Mutation {}
 
-type Schema = juniper::RootNode<'static, Query, Mutation>;
+pub(crate) type Schema = juniper::RootNode<'static, Query, Mutation>;
 
 #[derive(Debug, Clone, Identifiable, Queryable)]
-pub struct User {
+pub(crate) struct User {
     pub(crate) id: i32,
     pub(crate) name: String,
 }
@@ -66,12 +66,12 @@ impl User {
 
 #[derive(Debug, Clone, Insertable)]
 #[table_name = "users"]
-pub struct UserName {
+pub(crate) struct UserName {
     pub(crate) name: String,
 }
 
 impl UserName {
-    pub fn get_or_insert(self, conn: &MysqlConnection) -> anyhow::Result<i32> {
+    pub(crate) fn get_or_insert(self, conn: &MysqlConnection) -> anyhow::Result<i32> {
         use self::users::dsl::*;
         diesel::insert_or_ignore_into(users)
             .values(self.clone())
@@ -82,7 +82,7 @@ impl UserName {
 }
 
 #[derive(Debug, Clone, Identifiable, Insertable, Queryable)]
-pub struct Race {
+pub(crate) struct Race {
     pub(crate) id: i32,
     pub(crate) date: NaiveDate,
     pub(crate) track: String,
@@ -122,7 +122,7 @@ impl Race {
 
 #[derive(Debug, Clone, Identifiable, Insertable, Queryable)]
 #[primary_key(race_id, user_id)]
-pub struct RaceEntrant {
+pub(crate) struct RaceEntrant {
     pub(crate) race_id: i32,
     pub(crate) user_id: i32,
     pub(crate) position: Option<i32>,
@@ -194,7 +194,7 @@ impl RaceEntrant {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, DbEnum, GraphQLEnum)]
-pub enum Reason {
+pub(crate) enum Reason {
     Dns,
     Dnf,
     Dsq,

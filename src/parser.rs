@@ -8,7 +8,7 @@ use select::predicate::{Attr, Name, Predicate};
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
-pub struct Race {
+pub(crate) struct Race {
     track: String,
     laps: Option<i32>,
     minutes: Option<i32>,
@@ -16,7 +16,7 @@ pub struct Race {
 }
 
 impl Race {
-    pub fn insert_into(
+    pub(crate) fn insert_into(
         self,
         conn: &MysqlConnection,
         race_id: i32,
@@ -92,7 +92,7 @@ impl From<Reason> for model::Reason {
     }
 }
 
-pub fn parse_race(text: &str) -> anyhow::Result<Race> {
+pub(crate) fn parse_race(text: &str) -> anyhow::Result<Race> {
     let document = Document::from(text);
 
     let score_table = document
