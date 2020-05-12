@@ -18,7 +18,7 @@ pub struct Database {
 }
 
 impl Database {
-    pub fn new(db_url: &str) -> anyhow::Result<Database> {
+    pub fn connect(db_url: &str) -> anyhow::Result<Database> {
         Ok(Database {
             conn: Connection::establish(db_url)?,
         })
