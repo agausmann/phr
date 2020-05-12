@@ -9,8 +9,7 @@ fn main() -> anyhow::Result<()> {
 
     let api = Api::new(&database_url)?;
     warp::serve(
-        warp::path("graphql")
-            .and(api.to_filter())
+        (warp::path("graphql").and(api.to_filter()))
             .or(warp::path("graphiql").and(juniper_warp::graphiql_filter("/graphql"))),
     )
     .run(([127, 0, 0, 1], 8080));
