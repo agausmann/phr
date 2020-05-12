@@ -275,13 +275,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_26741() {
-        let race = parse_race(include_str!("samples/26741.html")).unwrap();
-        let expected = include!("samples/26741.rs");
-        assert_eq!(race, expected)
-    }
-
-    #[test]
     fn parse_events() {
         use std::io::Read;
 

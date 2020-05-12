@@ -15,3 +15,7 @@ dotenv = "0.15.0"
 juniper = { version = "0.14.2", default-features = false, features = ["chrono"] }
 scan_fmt = "0.2.5"
 select = "0.4.3"
+
+[dev-dependencies]
+flate2 = "1.0.14"
+tar = "0.4.26"
