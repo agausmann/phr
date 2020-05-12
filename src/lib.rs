@@ -3,11 +3,12 @@
 #[macro_use]
 extern crate diesel;
 
+mod api;
 mod model;
 mod parser;
 mod schema;
 
-use self::model::{Context, Mutation, Query, Schema};
+use self::api::{Context, Mutation, Query, Schema};
 use self::parser::parse_race;
 use chrono::naive::NaiveDate;
 use diesel::prelude::*;
