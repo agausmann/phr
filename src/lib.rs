@@ -44,18 +44,18 @@ impl Api {
         })
     }
 
-    pub fn serve<A>(self, addr: A, endpoint: &'static str)
+    pub fn serve<A>(self, addr: A)
     where
         A: Into<SocketAddr> + 'static,
     {
         let context = self.context;
         warp::serve(
-            warp::get2()
-                .and(warp::path(endpoint))
+            warp::path("graphql")
                 .and(juniper_warp::make_graphql_filter(
                     self.schema,
                     warp::any().map(move || context.clone()).boxed(),
-                )),
+                ))
+                .or(warp::path("graphiql").and(juniper_warp::graphiql_filter("/graphql"))),
         )
         .run(addr)
     }
