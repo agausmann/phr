@@ -1,4 +1,4 @@
 20c20
 <         reason -> Nullable<Enum>,
 ---
->         reason -> Nullable<ReasonMapping>,
+>         reason -> Nullable<crate::model::ReasonMapping>,

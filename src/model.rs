@@ -1,13 +1,8 @@
 use crate::schema::{race_entrants, races, users};
 use chrono::naive::NaiveDate;
-use diesel::backend::Backend;
-use diesel::deserialize::{self, FromSql};
 use diesel::prelude::*;
-use diesel::serialize::{self, Output, ToSql};
-use diesel::sql_types::{Integer, Nullable};
 use diesel_derive_enum::DbEnum;
 use juniper::{FieldResult, GraphQLEnum};
-use std::io::Write;
 
 pub struct Context {
     db: MysqlConnection,
