@@ -12,7 +12,8 @@ use self::api::{Context, Mutation, Query, Schema};
 use self::parser::parse_race;
 use chrono::naive::NaiveDate;
 use diesel::prelude::*;
-use std::net::SocketAddr;
+use http::response::Response;
+use warp::filters::BoxedFilter;
 use warp::Filter;
 
 pub struct Database {
@@ -44,19 +45,12 @@ impl Api {
         })
     }
 
-    pub fn serve<A>(self, addr: A)
-    where
-        A: Into<SocketAddr> + 'static,
-    {
+    pub fn to_filter(self) -> BoxedFilter<(Response<Vec<u8>>,)> {
         let context = self.context;
-        warp::serve(
-            warp::path("graphql")
-                .and(juniper_warp::make_graphql_filter(
-                    self.schema,
-                    warp::any().map(move || context.clone()).boxed(),
-                ))
-                .or(warp::path("graphiql").and(juniper_warp::graphiql_filter("/graphql"))),
+        juniper_warp::make_graphql_filter(
+            self.schema,
+            warp::any().map(move || context.clone()).boxed(),
         )
-        .run(addr)
+        .boxed()
     }
 }
