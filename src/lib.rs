@@ -12,6 +12,8 @@ use self::api::{Context, Mutation, Query, Schema};
 use self::parser::parse_race;
 use chrono::naive::NaiveDate;
 use diesel::prelude::*;
+use std::net::SocketAddr;
+use warp::Filter;
 
 pub struct Database {
     conn: MysqlConnection,
@@ -37,10 +39,24 @@ pub struct Api {
 impl Api {
     pub fn new(db_url: &str) -> anyhow::Result<Api> {
         Ok(Api {
-            context: Context {
-                db: Connection::establish(db_url)?,
-            },
+            context: Context::new(db_url)?,
             schema: Schema::new(Query, Mutation),
         })
+    }
+
+    pub fn serve<A>(self, addr: A, endpoint: &'static str)
+    where
+        A: Into<SocketAddr> + 'static,
+    {
+        let context = self.context;
+        warp::serve(
+            warp::get2()
+                .and(warp::path(endpoint))
+                .and(juniper_warp::make_graphql_filter(
+                    self.schema,
+                    warp::any().map(move || context.clone()).boxed(),
+                )),
+        )
+        .run(addr)
     }
 }

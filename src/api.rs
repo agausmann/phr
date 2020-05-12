@@ -1,12 +1,22 @@
 use crate::model::{Race, RaceEntrant, Reason, User};
 use chrono::naive::NaiveDate;
 use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, Pool};
 use juniper::FieldResult;
 
 pub(crate) type Schema = juniper::RootNode<'static, Query, Mutation>;
 
+#[derive(Clone)]
 pub(crate) struct Context {
-    pub(crate) db: MysqlConnection,
+    pub(crate) db: Pool<ConnectionManager<MysqlConnection>>,
+}
+
+impl Context {
+    pub(crate) fn new(db_url: &str) -> anyhow::Result<Context> {
+        Ok(Context {
+            db: Pool::new(ConnectionManager::new(db_url))?,
+        })
+    }
 }
 
 impl juniper::Context for Context {}
@@ -16,21 +26,24 @@ pub(crate) struct Query;
 #[juniper::object(Context = Context)]
 impl Query {
     fn user(context: &Context, id: i32) -> FieldResult<Option<User>> {
+        let db = context.db.get()?;
         use crate::schema::users::dsl::*;
-        Ok(users.find(id).first(&context.db).optional()?)
+        Ok(users.find(id).first(&db).optional()?)
     }
 
     fn username(context: &Context, name: String) -> FieldResult<Option<User>> {
+        let db = context.db.get()?;
         use crate::schema::users::dsl::*;
         Ok(users
             .filter(crate::schema::users::dsl::name.eq(name))
-            .first(&context.db)
+            .first(&db)
             .optional()?)
     }
 
     fn race(context: &Context, id: i32) -> FieldResult<Option<Race>> {
+        let db = context.db.get()?;
         use crate::schema::races::dsl::*;
-        Ok(races.find(id).first(&context.db).optional()?)
+        Ok(races.find(id).first(&db).optional()?)
     }
 }
 
@@ -50,10 +63,9 @@ impl User {
     }
 
     fn entries(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
+        let db = context.db.get()?;
         use crate::schema::race_entrants::dsl::*;
-        Ok(race_entrants
-            .filter(user_id.eq(self.id))
-            .load(&context.db)?)
+        Ok(race_entrants.filter(user_id.eq(self.id)).load(&db)?)
     }
 }
 
@@ -80,10 +92,9 @@ impl Race {
     }
 
     fn entrants(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
+        let db = context.db.get()?;
         use crate::schema::race_entrants::dsl::*;
-        Ok(race_entrants
-            .filter(race_id.eq(self.id))
-            .load(&context.db)?)
+        Ok(race_entrants.filter(race_id.eq(self.id)).load(&db)?)
     }
 }
 
@@ -94,8 +105,9 @@ impl RaceEntrant {
     }
 
     fn race(&self, context: &Context) -> FieldResult<Race> {
+        let db = context.db.get()?;
         use crate::schema::races::dsl::*;
-        Ok(races.find(self.race_id).first(&context.db)?)
+        Ok(races.find(self.race_id).first(&db)?)
     }
 
     fn user_id(&self) -> i32 {
@@ -103,8 +115,9 @@ impl RaceEntrant {
     }
 
     fn user(&self, context: &Context) -> FieldResult<User> {
+        let db = context.db.get()?;
         use crate::schema::users::dsl::*;
-        Ok(users.find(self.user_id).first(&context.db)?)
+        Ok(users.find(self.user_id).first(&db)?)
     }
 
     fn position(&self) -> Option<i32> {
