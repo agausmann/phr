@@ -1,4 +1,3 @@
-use dotenv::dotenv;
 use phr_backend::Api;
 use std::process::Command;
 use std::{env, fs};
@@ -6,8 +5,6 @@ use std::{env, fs};
 const QUERIES: &[&str] = &[];
 
 fn main() {
-    dotenv().ok();
-
     let out_dir = env::var("OUT_DIR").unwrap();
 
     let schema_json = Api::without_database()
