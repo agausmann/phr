@@ -8,11 +8,9 @@ const QUERIES: &[&str] = &[];
 fn main() {
     dotenv().ok();
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let out_dir = env::var("OUT_DIR").unwrap();
 
-    let schema_json = Api::new(&database_url)
-        .expect("unable to build api")
+    let schema_json = Api::without_database()
         .introspect()
         .expect("unable to introspect schema");
 

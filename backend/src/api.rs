@@ -1,21 +1,34 @@
 use crate::model::{Race, RaceEntrant, Reason, User};
+use anyhow::Context as _;
 use chrono::naive::NaiveDate;
 use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use juniper::FieldResult;
 
 pub(crate) type Schema = juniper::RootNode<'static, Query, Mutation>;
 
 #[derive(Clone)]
 pub(crate) struct Context {
-    pub(crate) db: Pool<ConnectionManager<MysqlConnection>>,
+    pub(crate) db: Option<Pool<ConnectionManager<MysqlConnection>>>,
 }
 
 impl Context {
     pub(crate) fn new(db_url: &str) -> anyhow::Result<Context> {
         Ok(Context {
-            db: Pool::new(ConnectionManager::new(db_url))?,
+            db: Some(Pool::new(ConnectionManager::new(db_url))?),
         })
+    }
+
+    pub(crate) fn without_database() -> Context {
+        Context { db: None }
+    }
+
+    fn db(&self) -> anyhow::Result<PooledConnection<ConnectionManager<MysqlConnection>>> {
+        Ok(self
+            .db
+            .as_ref()
+            .context("not connected to a database")?
+            .get()?)
     }
 }
 
@@ -26,19 +39,19 @@ pub(crate) struct Query;
 #[juniper::object(Context = Context)]
 impl Query {
     fn user(context: &Context, id: i32) -> FieldResult<Option<User>> {
-        let db = context.db.get()?;
+        let db = context.db()?;
         use crate::schema::users::dsl::users;
         Ok(users.find(id).first(&db).optional()?)
     }
 
     fn username(context: &Context, name: String) -> FieldResult<Option<User>> {
-        let db = context.db.get()?;
+        let db = context.db()?;
         use crate::schema::users::dsl::{self, users};
         Ok(users.filter(dsl::name.eq(name)).first(&db).optional()?)
     }
 
     fn race(context: &Context, id: i32) -> FieldResult<Option<Race>> {
-        let db = context.db.get()?;
+        let db = context.db()?;
         use crate::schema::races::dsl::races;
         Ok(races.find(id).first(&db).optional()?)
     }
@@ -60,7 +73,7 @@ impl User {
     }
 
     fn entries(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
-        let db = context.db.get()?;
+        let db = context.db()?;
         use crate::schema::race_entrants::dsl::{race_entrants, user_id};
         Ok(race_entrants.filter(user_id.eq(self.id)).load(&db)?)
     }
@@ -89,7 +102,7 @@ impl Race {
     }
 
     fn entrants(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
-        let db = context.db.get()?;
+        let db = context.db()?;
         use crate::schema::race_entrants::dsl::{race_entrants, race_id};
         Ok(race_entrants.filter(race_id.eq(self.id)).load(&db)?)
     }
@@ -102,7 +115,7 @@ impl RaceEntrant {
     }
 
     fn race(&self, context: &Context) -> FieldResult<Race> {
-        let db = context.db.get()?;
+        let db = context.db()?;
         use crate::schema::races::dsl::races;
         Ok(races.find(self.race_id).first(&db)?)
     }
@@ -112,7 +125,7 @@ impl RaceEntrant {
     }
 
     fn user(&self, context: &Context) -> FieldResult<User> {
-        let db = context.db.get()?;
+        let db = context.db()?;
         use crate::schema::users::dsl::users;
         Ok(users.find(self.user_id).first(&db)?)
     }

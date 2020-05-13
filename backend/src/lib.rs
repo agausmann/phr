@@ -48,6 +48,13 @@ impl Api {
         })
     }
 
+    pub fn without_database() -> Api {
+        Api {
+            context: Context::without_database(),
+            schema: Schema::new(Query, Mutation),
+        }
+    }
+
     pub fn introspect(&self) -> anyhow::Result<String> {
         let (value, _errs) =
             juniper::introspect(&self.schema, &self.context, IntrospectionFormat::All)
