@@ -1,7 +1,7 @@
 use anyhow::Context;
 use chrono::naive::NaiveDate;
 use dotenv::dotenv;
-use phc_stats::Database;
+use phr_backend::Database;
 use std::{env, fs};
 
 const USAGE: &str = "usage: add_race <file> <id> <YYYY-MM-dd>";
