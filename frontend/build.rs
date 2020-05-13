@@ -19,13 +19,17 @@ fn main() {
     let schema_path = format!("{}/schema.json", out_dir);
     fs::write(&schema_path, &schema_json).expect("unable to write schema.json");
 
+    let query_source_dir = "src/queries";
+    println!("cargo:rerun-if-changed={}", query_source_dir);
+
     let query_out_dir = format!("{}/queries", out_dir);
     fs::create_dir_all(&query_out_dir).expect("cannot create query output directory");
 
     for &query in QUERIES {
+        let query_source = format!("{}/{}.graphql", query_source_dir, query);
         let success = Command::new("graphql-client")
             .arg("generate")
-            .arg(format!("src/queries/{}.graphql", query))
+            .arg(&query_source)
             .arg("--schema-path")
             .arg(&schema_path)
             .arg("-o")
@@ -33,6 +37,7 @@ fn main() {
             .status()
             .expect("unable to run graphql-client cli")
             .success();
-        assert!(success, "unable to generate graphql query")
+        assert!(success, "unable to generate graphql query");
+        println!("cargo:rerun-if-changed={}", query_source);
     }
 }
