@@ -10,10 +10,12 @@ mod schema;
 
 use self::api::{Context, Mutation, Query, Schema};
 use self::parser::parse_race;
+use anyhow::anyhow;
 use chrono::naive::NaiveDate;
 use diesel::prelude::*;
-use http::response::Response;
+use juniper::IntrospectionFormat;
 use warp::filters::BoxedFilter;
+use warp::reply::Reply;
 use warp::Filter;
 
 pub struct Database {
@@ -37,6 +39,7 @@ pub struct Api {
     context: Context,
     schema: Schema,
 }
+
 impl Api {
     pub fn new(db_url: &str) -> anyhow::Result<Api> {
         Ok(Api {
@@ -45,7 +48,14 @@ impl Api {
         })
     }
 
-    pub fn to_filter(self) -> BoxedFilter<(Response<Vec<u8>>,)> {
+    pub fn introspect(&self) -> anyhow::Result<String> {
+        let (value, _errs) =
+            juniper::introspect(&self.schema, &self.context, IntrospectionFormat::All)
+                .map_err(|e| anyhow!("{:?}", e))?;
+        Ok(serde_json::to_string(&value)?)
+    }
+
+    pub fn to_filter(self) -> BoxedFilter<(impl Reply,)> {
         let context = self.context;
         juniper_warp::make_graphql_filter(
             self.schema,
