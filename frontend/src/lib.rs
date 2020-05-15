@@ -39,7 +39,7 @@ impl Component for Model {
     fn view(&self) -> Html {
         html! {
             <Router<Route, ()>
-                render = Router::render(|switch: Route| {
+                render = Router::render(|switch| {
                     match switch {
                         Route::Index => html!(<Index />),
                         Route::Racer(id) => html!(<Racer id=id />),
