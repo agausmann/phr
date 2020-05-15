@@ -1,11 +1,20 @@
+pub mod api;
+pub mod routes;
+
+use routes::Index;
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
-
-mod api;
+use yew_router::prelude::*;
 
 pub struct Model {}
 
 pub enum Msg {}
+
+#[derive(Debug, Clone, Switch)]
+pub enum Route {
+    #[to = "/"]
+    Index,
+}
 
 impl Component for Model {
     type Message = Msg;
@@ -25,7 +34,13 @@ impl Component for Model {
 
     fn view(&self) -> Html {
         html! {
-            <div />
+            <Router<Route, ()>
+                render = Router::render(|switch: Route| {
+                    match switch {
+                        Route::Index => html!(<Index />),
+                    }
+                })
+            />
         }
     }
 }
