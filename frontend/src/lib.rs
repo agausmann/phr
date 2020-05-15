@@ -1,7 +1,7 @@
 pub mod api;
 pub mod routes;
 
-use routes::Index;
+use routes::{Index, Racer, Racers};
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -14,6 +14,10 @@ pub enum Msg {}
 pub enum Route {
     #[to = "/"]
     Index,
+    #[to = "/racers/{id}"]
+    Racer(i32),
+    #[to = "/racers/"]
+    Racers,
 }
 
 impl Component for Model {
@@ -38,6 +42,8 @@ impl Component for Model {
                 render = Router::render(|switch: Route| {
                     match switch {
                         Route::Index => html!(<Index />),
+                        Route::Racer(id) => html!(<Racer id=id />),
+                        Route::Racers => html!(<Racers />),
                     }
                 })
             />
