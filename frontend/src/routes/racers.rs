@@ -2,7 +2,7 @@ use yew::prelude::*;
 
 pub struct Racers {}
 
-pub struct Msg {}
+pub enum Msg {}
 
 impl Component for Racers {
     type Message = Msg;
@@ -12,8 +12,8 @@ impl Component for Racers {
         Racers {}
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        false
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {}
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {

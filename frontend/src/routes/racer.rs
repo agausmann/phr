@@ -19,8 +19,8 @@ impl Component for Racer {
         Racer { props }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        false
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {}
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {

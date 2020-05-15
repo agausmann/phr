@@ -2,7 +2,7 @@ use yew::prelude::*;
 
 pub struct Index {}
 
-pub struct Msg {}
+pub enum Msg {}
 
 impl Component for Index {
     type Message = Msg;
@@ -12,8 +12,8 @@ impl Component for Index {
         Index {}
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        false
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {}
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {

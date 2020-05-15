@@ -28,8 +28,8 @@ impl Component for Model {
         Model {}
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        false
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {}
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
