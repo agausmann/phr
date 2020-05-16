@@ -4,3 +4,4 @@ members = [
     "frontend",
     "server",
 ]
+default-members = ["server"]

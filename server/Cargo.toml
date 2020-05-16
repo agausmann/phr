@@ -10,3 +10,7 @@ dotenv = "0.15.0"
 juniper_warp = "0.5.2"
 phr-backend = { path = "../backend", version = "0.1.0" }
 warp = "0.1.22"
+
+[build-dependencies]
+anyhow = "1.0.28"
+walkdir = "2.3.1"
