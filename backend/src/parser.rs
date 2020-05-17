@@ -34,11 +34,11 @@ impl Race {
             new_race.insert_into(races).execute(conn)?;
 
             for entrant in self.entrants {
-                let new_user = model::UserName { name: entrant.name };
-                let user_id = new_user.get_or_insert(conn)?;
+                let new_driver = model::DriverName { name: entrant.name };
+                let driver_id = new_driver.get_or_insert(conn)?;
                 let new_entrant = model::RaceEntrant {
                     race_id,
-                    user_id,
+                    driver_id,
                     position: Some(entrant.position),
                     vehicle: Some(entrant.vehicle),
                     time: entrant.time.map(|dur| dur.as_millis() as i32),

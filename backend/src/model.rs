@@ -1,29 +1,29 @@
-use crate::schema::{race_entrants, races, users};
+use crate::schema::{drivers, race_entrants, races};
 use chrono::naive::NaiveDate;
 use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
 use juniper::GraphQLEnum;
 
 #[derive(Debug, Clone, Identifiable, Queryable)]
-pub(crate) struct User {
+pub(crate) struct Driver {
     pub(crate) id: i32,
     pub(crate) name: String,
 }
 
 #[derive(Debug, Clone, Insertable)]
-#[table_name = "users"]
-pub(crate) struct UserName {
+#[table_name = "drivers"]
+pub(crate) struct DriverName {
     pub(crate) name: String,
 }
 
-impl UserName {
+impl DriverName {
     pub(crate) fn get_or_insert(self, conn: &MysqlConnection) -> anyhow::Result<i32> {
-        use self::users::dsl::*;
-        diesel::insert_or_ignore_into(users)
+        use self::drivers::dsl::*;
+        diesel::insert_or_ignore_into(drivers)
             .values(self.clone())
             .execute(conn)?;
 
-        Ok(users.select(id).filter(name.eq(self.name)).first(conn)?)
+        Ok(drivers.select(id).filter(name.eq(self.name)).first(conn)?)
     }
 }
 
@@ -37,10 +37,10 @@ pub(crate) struct Race {
 }
 
 #[derive(Debug, Clone, Identifiable, Insertable, Queryable)]
-#[primary_key(race_id, user_id)]
+#[primary_key(race_id, driver_id)]
 pub(crate) struct RaceEntrant {
     pub(crate) race_id: i32,
-    pub(crate) user_id: i32,
+    pub(crate) driver_id: i32,
     pub(crate) position: Option<i32>,
     pub(crate) vehicle: Option<String>,
     pub(crate) time: Option<i32>,

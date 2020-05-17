@@ -1,4 +1,4 @@
-use crate::model::{Race, RaceEntrant, Reason, User};
+use crate::model::{Driver, Race, RaceEntrant, Reason};
 use anyhow::Context as _;
 use chrono::naive::NaiveDate;
 use diesel::prelude::*;
@@ -38,16 +38,16 @@ pub(crate) struct Query;
 
 #[juniper::object(Context = Context)]
 impl Query {
-    fn user(context: &Context, id: i32) -> FieldResult<Option<User>> {
+    fn driver(context: &Context, id: i32) -> FieldResult<Option<Driver>> {
         let db = context.db()?;
-        use crate::schema::users::dsl::users;
-        Ok(users.find(id).first(&db).optional()?)
+        use crate::schema::drivers::dsl::drivers;
+        Ok(drivers.find(id).first(&db).optional()?)
     }
 
-    fn username(context: &Context, name: String) -> FieldResult<Option<User>> {
+    fn driver_name(context: &Context, name: String) -> FieldResult<Option<Driver>> {
         let db = context.db()?;
-        use crate::schema::users::dsl::{self, users};
-        Ok(users.filter(dsl::name.eq(name)).first(&db).optional()?)
+        use crate::schema::drivers::dsl::{self, drivers};
+        Ok(drivers.filter(dsl::name.eq(name)).first(&db).optional()?)
     }
 
     fn race(context: &Context, id: i32) -> FieldResult<Option<Race>> {
@@ -63,7 +63,7 @@ pub(crate) struct Mutation;
 impl Mutation {}
 
 #[juniper::object(Context = Context)]
-impl User {
+impl Driver {
     fn id(&self) -> i32 {
         self.id
     }
@@ -74,8 +74,8 @@ impl User {
 
     fn entries(&self, context: &Context) -> FieldResult<Vec<RaceEntrant>> {
         let db = context.db()?;
-        use crate::schema::race_entrants::dsl::{race_entrants, user_id};
-        Ok(race_entrants.filter(user_id.eq(self.id)).load(&db)?)
+        use crate::schema::race_entrants::dsl::{driver_id, race_entrants};
+        Ok(race_entrants.filter(driver_id.eq(self.id)).load(&db)?)
     }
 }
 
@@ -120,14 +120,14 @@ impl RaceEntrant {
         Ok(races.find(self.race_id).first(&db)?)
     }
 
-    fn user_id(&self) -> i32 {
-        self.user_id
+    fn driver_id(&self) -> i32 {
+        self.driver_id
     }
 
-    fn user(&self, context: &Context) -> FieldResult<User> {
+    fn driver(&self, context: &Context) -> FieldResult<Driver> {
         let db = context.db()?;
-        use crate::schema::users::dsl::users;
-        Ok(users.find(self.user_id).first(&db)?)
+        use crate::schema::drivers::dsl::drivers;
+        Ok(drivers.find(self.driver_id).first(&db)?)
     }
 
     fn position(&self) -> Option<i32> {
